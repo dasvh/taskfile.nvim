@@ -1,47 +1,73 @@
-# A Neovim Plugin Template
+# taskfile.nvim
 
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ellisonleao/nvim-plugin-template/lint-test.yml?branch=main&style=for-the-badge)
+![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/dasvh/taskfile.nvim/lint-test.yml?branch=main&style=for-the-badge)
 ![Lua](https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua)
 
-A template repository for Neovim plugins.
+ A simple plugin for [taskfiles](https://taskfile.dev/)
 
-## Using it
+## Features
 
-Via `gh`:
+- Run a specfic task directly within Neovim
+- Browse available tasks with a floating window
+- Preview each task’s command before execution
+- Run tasks in a floating terminal
+- Automatically scroll to bottom of output (optional)
+- Rerun last task via command or keymap
 
+## Requirements
+
+- [task](https://taskfile.dev/#/installation) CLI installed and in your `$PATH`
+- Neovim 0.8 or higher (0.9+ recommended)
+
+## Setup
+
+```lua
+{
+  "dasvh/taskfile.nvim",
+  config = function()
+    require("taskfile").setup()
+  end,
+}
 ```
-$ gh repo create my-plugin -p ellisonleao/nvim-plugin-template
+
+### Configuration
+
+You can pass options to the `setup()` function:
+
+```lua
+require("taskfile").setup({
+  float = {
+    width = 0.7,          -- Percentage of screen width for floating windows
+    height = 0.7,         -- Percentage of screen height
+    border = "single",    -- Border style: 'single', 'rounded', etc.
+  },
+  scroll = {
+    auto = true,          -- Scroll to bottom of terminal on output
+  },
+  keymaps = {
+    rerun = "<leader>rt", -- Keymap for rerunning last task
+  },
+})
 ```
 
-Via github web page:
+All fields are optional. Defaults are:
 
-Click on `Use this template`
-
-![](https://docs.github.com/assets/cb-36544/images/help/repository/use-this-template-button.png)
-
-## Features and structure
-
-- 100% Lua
-- Github actions for:
-  - running tests using [plenary.nvim](https://github.com/nvim-lua/plenary.nvim) and [busted](https://olivinelabs.com/busted/)
-  - check for formatting errors (Stylua)
-  - vimdocs autogeneration from README.md file
-  - luarocks release (LUAROCKS_API_KEY secret configuration required)
-
-### Plugin structure
-
+```lua
+{
+  float = { width = 0.8, height = 0.8, border = "rounded" },
+  scroll = { auto = true },
+  keymaps = { rerun = "<leader>rt" },
+}
 ```
-.
-├── lua
-│   ├── plugin_name
-│   │   └── module.lua
-│   └── plugin_name.lua
-├── Makefile
-├── plugin
-│   └── plugin_name.lua
-├── README.md
-├── tests
-│   ├── minimal_init.lua
-│   └── plugin_name
-│       └── plugin_name_spec.lua
-```
+
+## Usage
+
+This plugin reads your Taskfile and displays available tasks.
+
+### Commands
+
+- `:Task <task_name>`: Run a specific task by name
+- `:Task`: Show a floating task selector with preview
+- `:TaskRerun`: Rerun the last executed task
+
+You can also bind a key to rerun using the `keymaps.rerun` config.
