@@ -131,4 +131,3 @@ M.select_task_with_preview = function(tasks)
 end
 
 return M
-

@@ -59,4 +59,3 @@ M.open_floating_win = function(buf, opts, enter)
 end
 
 return M
-
