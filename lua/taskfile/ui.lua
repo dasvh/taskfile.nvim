@@ -55,7 +55,7 @@ end
 ---@param config WindowConfig
 ---@return number, number Buffer and window handles
 M.create_terminal_window = function(config)
-  local width, height, row, col, border = utils.float_size(config)
+  local width, height, row, col, border = utils.window_layout(config)
   local buf = vim.api.nvim_create_buf(false, true)
   local win = utils.open_floating_win(buf, {
     row = row,
