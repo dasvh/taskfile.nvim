@@ -3,7 +3,7 @@
 ![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/dasvh/taskfile.nvim/lint-test.yml?branch=main&style=for-the-badge)
 ![Lua](https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua)
 
- A simple plugin for [taskfiles](https://taskfile.dev/)
+A simple plugin for [taskfiles](https://taskfile.dev/)
 
 ## Features
 
@@ -35,30 +35,51 @@
 You can pass options to the `setup()` function:
 
 ```lua
-require("taskfile").setup({
-  float = {
-    width = 0.7,          -- Percentage of screen width for floating windows
-    height = 0.7,         -- Percentage of screen height
-    border = "single",    -- Border style: 'single', 'rounded', etc.
+require('taskfile').setup({
+  windows = {
+    output = {           -- Task output window
+      width = 0.8,       -- Width of the window (percentage of editor width)
+      height = 0.8,      -- Height of window (percentage of editor height)
+      border = "rounded" -- Border style: 'single', 'double', 'rounded', etc.
+    },
+    list = {             -- Task list and preview window
+      width = 0.6,
+      height = 0.4,
+      border = "rounded"
+    },
   },
   scroll = {
-    auto = true,          -- Scroll to bottom of terminal on output
+    auto = true,         -- Auto-scroll output to bottom when new lines are printed
   },
   keymaps = {
-    rerun = "<leader>rt", -- Keymap for rerunning last task
+    rerun = "<leader>tr" -- Keymap to rerun the last executed task
   },
 })
 ```
 
-All fields are optional. Defaults are:
+All fields are optional. These are the default values:
 
 ```lua
 {
-  float = { width = 0.8, height = 0.8, border = "rounded" },
-  scroll = { auto = true },
-  keymaps = { rerun = "<leader>rt" },
+  windows = {
+    output = {
+      width = 0.8,
+      height = 0.8,
+      border = "rounded",
+    },
+    list = {
+      width = 0.6,
+      height = 0.4,
+      border = "rounded",
+    },
+  },
+  scroll = {
+    auto = true,
+  },
+  keymaps = {
+    rerun = "<leader>tr",
+  },
 }
-```
 
 ## Usage
 
@@ -71,3 +92,4 @@ This plugin reads your Taskfile and displays available tasks.
 - `:TaskRerun`: Rerun the last executed task
 
 You can also bind a key to rerun using the `keymaps.rerun` config.
+```
