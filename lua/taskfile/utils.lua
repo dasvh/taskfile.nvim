@@ -9,7 +9,7 @@ M.calculate_dimensions = function(percent_width, percent_height)
   return width, height, row, col
 end
 
-M.float_size = function(config)
+M.window_layout = function(config)
   local width, height, row, col = M.calculate_dimensions(config.width or 0.8, config.height or 0.8)
   return width, height, row, col, config.border or "rounded"
 end

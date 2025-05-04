@@ -5,10 +5,17 @@ local utils = require("taskfile.utils")
 
 --- default configuration
 local config = {
-  float = {
-    width = 0.8,
-    height = 0.8,
-    border = "rounded",
+  windows = {
+    output = {
+      width = 0.8,
+      height = 0.8,
+      border = "rounded",
+    },
+    list = {
+      width = 0.6,
+      height = 0.4,
+      border = "rounded",
+    },
   },
   scroll = {
     auto = true,
@@ -21,7 +28,7 @@ local config = {
 M._win = nil
 M._buf = nil
 M._last_task = nil
-M._options = vim.tbl_deep_extend("force", {}, config, opts or {})
+M._options = vim.tbl_deep_extend("force", {}, config or {})
 
 local function setup_global_keymaps()
   if M._options.keymaps and M._options.keymaps.rerun then
@@ -36,7 +43,7 @@ local function setup_global_keymaps()
   end
 end
 
-local function run_task_in_terminal(buf, task)
+local function run_task_in_terminal(task)
   local opts = {}
   if M._options.scroll.auto then
     opts.on_stdout = utils.scroll_to_bottom
@@ -50,9 +57,10 @@ end
 
 local function set_quit_key(buf, win)
   vim.keymap.set("n", "q", function()
-    if vim.api.nvim_win_is_valid(win) then
-      vim.api.nvim_win_close(win, true)
-    end
+    utils.cleanup_terminal(win, buf)
+  end, { buffer = buf, nowait = true, silent = true })
+  vim.keymap.set("n", "<Esc>", function()
+    utils.cleanup_terminal(win, buf)
   end, { buffer = buf, nowait = true, silent = true })
 end
 
@@ -64,15 +72,20 @@ local function taskfile_check()
   return true
 end
 
---- Taskfile plugin configuration
+---@class WindowConfig
+---@field width? number  # Width of the window (0–1 for percentage)
+---@field height? number # Height of the window (0–1 for percentage)
+---@field border? string # Border style (e.g., "single", "rounded")
+
 ---@class TaskfileConfig
----@field float? { width?: number, height?: number, border?: string } Floating window dimensions and border
----@field scroll? { auto?: boolean } Auto-scroll output to the bottom
----@field keymaps? { rerun?: string } Keymap configuration for commands like rerun
+---@field windows? { output?: WindowConfig, list?: WindowConfig } # Floating window layouts
+---@field scroll? { auto?: boolean } # Auto-scroll output to the bottom
+---@field keymaps? { rerun?: string } # Keymap configuration for commands like rerun
 --- Setup the Taskfile plugin
 ---@param opts TaskfileConfig?
 M.setup = function(opts)
   ui.set_execute_task(M.execute_task)
+  ui.set_close_task_output(M.close_task_output_window)
 
   vim.validate({
     opts = { opts, "table", true },
@@ -84,6 +97,8 @@ M.setup = function(opts)
   end
 end
 
+--- Get the list of tasks from the Taskfile
+---@return table A list of tasks from the Taskfile, or an empty table if an error occurs
 M.get_tasks = function()
   if not taskfile_check() then
     return {}
@@ -101,10 +116,14 @@ M.get_tasks = function()
   return data.tasks
 end
 
+--- Get the last executed task
+---@return string Name of the last executed task
 M.get_last_task = function()
   return M._last_task
 end
 
+--- Execute a task from the Taskfile
+---@param task string Name of the task to execute
 M.execute_task = function(task)
   if not taskfile_check() then
     return
@@ -124,21 +143,35 @@ M.execute_task = function(task)
     return
   end
 
-  utils.cleanup_terminal(M._win, M._buf)
-  local buf, win = ui.create_terminal_window(M._options.float)
+  ui.close_all_windows()
+  local buf, win = ui.create_terminal_window(M._options.windows.output)
+  M._buf, M._win = buf, win
 
-  run_task_in_terminal(buf, task)
+  run_task_in_terminal(task)
   M._last_task = task
-
   set_quit_key(buf, win)
 end
 
+--- Handles task selection from the UI
+---@param item table Selected task item
 M.on_choice = function(item)
   if not item or not item.name then
     vim.notify("Invalid task selection: no 'name' field", vim.log.levels.WARN)
     return
   end
   M.execute_task(item.name)
+end
+
+M.close_task_output_window = function()
+  utils.cleanup_terminal(M._win, M._buf)
+  M._win = nil
+  M._buf = nil
+end
+
+--- Return the window configuration for the list
+---@return WindowConfig
+M.get_list_config = function()
+  return M._options.windows.list
 end
 
 return M
