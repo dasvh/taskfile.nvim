@@ -27,7 +27,8 @@ describe("with taskfile", function()
     vim.fn.mkdir(temp_dir, "p")
 
     taskfile_path = Path:new(temp_dir, "Taskfile.yml")
-    taskfile_path:write([[
+    taskfile_path:write(
+      [[
 version: '3'
 
 tasks:
@@ -38,7 +39,9 @@ tasks:
   second:
     cmds:
       - echo "second task without desc"
-]], "w")
+]],
+      "w"
+    )
 
     original_dir = vim.loop.cwd()
     vim.cmd("cd " .. temp_dir)
