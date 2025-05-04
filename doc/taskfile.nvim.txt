@@ -7,6 +7,7 @@ Table of Contents                            *taskfile.nvim-table-of-contents*
   - Features                            |taskfile.nvim-taskfile.nvim-features|
   - Requirements                    |taskfile.nvim-taskfile.nvim-requirements|
   - Setup                                  |taskfile.nvim-taskfile.nvim-setup|
+  - Usage                                  |taskfile.nvim-taskfile.nvim-usage|
 2. Links                                                 |taskfile.nvim-links|
 
 ==============================================================================
@@ -95,19 +96,21 @@ All fields are optional. These are the default values:
         rerun = "<leader>tr",
       },
     }
-    
-    ## Usage
-    
-    This plugin reads your Taskfile and displays available tasks.
-    
-    ### Commands
-    
-    - `:Task <task_name>`: Run a specific task by name
-    - `:Task`: Show a floating task selector with preview
-    - `:TaskRerun`: Rerun the last executed task
-    
-    You can also bind a key to rerun using the `keymaps.rerun` config.
 <
+
+
+USAGE                                      *taskfile.nvim-taskfile.nvim-usage*
+
+This plugin reads your Taskfile and displays available tasks.
+
+
+COMMANDS ~
+
+- `:Task <task_name>`Run a specific task by name
+- `:Task`Show a floating task selector with preview
+- `:TaskRerun`Rerun the last executed task
+
+You can also bind a key to rerun using the `keymaps.rerun` config. ```
 
 ==============================================================================
 2. Links                                                 *taskfile.nvim-links*
