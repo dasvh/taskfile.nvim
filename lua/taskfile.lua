@@ -4,21 +4,26 @@ local ui = require("taskfile.ui")
 ---@class Taskfile
 local M = {}
 
+--- Sets up the Taskfile plugin with optional configuration
 M.setup = core.setup
---- Execute a task in a floating terminal
---@param task string: name of the task to execute
+
+--- Executes a task in a floating terminal
 M.execute_task = core.execute_task
---- Return the last task executed
--- @return string|nil
+
+--- Returns the last task that was executed
 M.get_last_task = core.get_last_task
---- Opens the basic task selection window
--- @param tasks table: list of task definitions
-M.open_window = ui.open_window
---- Opens task selection window with preview
--- @param tasks table: list of task definitions
+
+--- Returns the window configuration for the list
+M.get_list_config = core.get_list_config
+
+--- Close all windows opened by taskfile.nvim
+M.close_all_windows = ui.close_all_windows
+
+--- Opens task selection window with side-by-side preview
 M.select_task_with_preview = ui.select_task_with_preview
---- Execute a task by name or open selection if none provided
--- @param task string|nil
+
+--- Executes a task by name if provided or opens task selection if no task specified
+---@param task? string Name of the task to execute (optional)
 M.execute_or_select = function(task)
   if task then
     core.execute_task(task)
@@ -28,7 +33,9 @@ M.execute_or_select = function(task)
       vim.notify("No tasks available", vim.log.levels.WARN)
       return
     end
-    ui.select_task_with_preview(tasks)
+
+    local preview_win_cfg = core.get_list_config()
+    ui.select_task_with_preview(tasks, preview_win_cfg)
   end
 end
 

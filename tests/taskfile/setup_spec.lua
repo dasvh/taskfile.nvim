@@ -8,23 +8,41 @@ describe("setup", function()
 
   it("should fallback to default config if no opts provided", function()
     core.setup()
+
     local opts = require("taskfile.core")._options
-    assert.are.same("rounded", opts.float.border)
+    assert.are.same("rounded", opts.windows.output.border)
+    assert.are.same("rounded", opts.windows.list.border)
   end)
 
   it("should apply custom float config", function()
     plugin.setup({
-      float = {
-        width = 0.5,
-        height = 0.5,
-        border = "double",
+      windows = {
+        output = {
+          width = 0.5,
+          height = 0.5,
+          border = "double",
+        },
       },
     })
 
-    local float_cfg = core._options.float
+    local output_cfg = core._options.windows.output
+    assert.are.same(output_cfg.width, 0.5)
+    assert.are.same(output_cfg.border, "double")
+  end)
 
-    assert.are.same(float_cfg.width, 0.5)
-    assert.are.same(float_cfg.border, "double")
+  it("should return windows list cfg", function()
+    plugin.setup({
+      windows = {
+        list = {
+          width = 0.4,
+          height = 0.4,
+          border = "single",
+        },
+      },
+    })
+
+    local list_cfg = core.get_list_config()
+    assert.are.same(list_cfg.width, 0.4)
   end)
 
   it("should apply scroll option", function()
