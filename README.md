@@ -80,6 +80,7 @@ All fields are optional. These are the default values:
     rerun = "<leader>tr",
   },
 }
+```
 
 ## Usage
 
