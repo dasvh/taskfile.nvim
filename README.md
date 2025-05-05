@@ -93,4 +93,3 @@ This plugin reads your Taskfile and displays available tasks.
 - `:TaskRerun`: Rerun the last executed task
 
 You can also bind a key to rerun using the `keymaps.rerun` config.
-```
