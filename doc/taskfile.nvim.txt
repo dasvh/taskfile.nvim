@@ -1,4 +1,4 @@
-*taskfile.nvim.txt*        For Neovim >= 0.8.0        Last change: 2025 May 04
+*taskfile.nvim.txt*        For Neovim >= 0.8.0        Last change: 2025 May 05
 
 ==============================================================================
 Table of Contents                            *taskfile.nvim-table-of-contents*
@@ -110,7 +110,7 @@ COMMANDS ~
 - `:Task`Show a floating task selector with preview
 - `:TaskRerun`Rerun the last executed task
 
-You can also bind a key to rerun using the `keymaps.rerun` config. ```
+You can also bind a key to rerun using the `keymaps.rerun` config.
 
 ==============================================================================
 2. Links                                                 *taskfile.nvim-links*
