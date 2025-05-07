@@ -7,12 +7,12 @@ A simple plugin for [taskfiles](https://taskfile.dev/)
 
 ## Features
 
-- Run a specfic task directly within Neovim
+- Run a specific task directly within Neovim
 - Browse available tasks with a floating window
 - Preview each task’s command before execution
 - Run tasks in a floating terminal
 - Automatically scroll to bottom of output (optional)
-- Rerun last task via command or keymap
+- Rerun last task via command or key-map
 
 ## Requirements
 
@@ -32,7 +32,8 @@ A simple plugin for [taskfiles](https://taskfile.dev/)
 
 ### Configuration
 
-You can pass options to the `setup()` function:
+You can pass options to the `setup()` function to customise behaviour.
+All fields are optional and shown below with their default values:
 
 ```lua
 require('taskfile').setup({
@@ -52,34 +53,9 @@ require('taskfile').setup({
     auto = true,         -- Auto-scroll output to bottom when new lines are printed
   },
   keymaps = {
-    rerun = "<leader>tr" -- Keymap to rerun the last executed task
+    rerun = "<leader>tr" -- Key-map to rerun the last executed task
   },
 })
-```
-
-All fields are optional. These are the default values:
-
-```lua
-{
-  windows = {
-    output = {
-      width = 0.8,
-      height = 0.8,
-      border = "rounded",
-    },
-    list = {
-      width = 0.6,
-      height = 0.4,
-      border = "rounded",
-    },
-  },
-  scroll = {
-    auto = true,
-  },
-  keymaps = {
-    rerun = "<leader>tr",
-  },
-}
 ```
 
 ## Usage
@@ -93,3 +69,11 @@ This plugin reads your Taskfile and displays available tasks.
 - `:TaskRerun`: Rerun the last executed task
 
 You can also bind a key to rerun using the `keymaps.rerun` config.
+
+<!-- panvimdoc-ignore-start -->
+
+## Demo
+
+![Demo GIF](./demo/demo.gif)
+
+<!-- panvimdoc-ignore-end -->
