@@ -58,4 +58,22 @@ M.open_floating_win = function(buf, opts, enter)
   )
 end
 
+--- Validate numeric fields fall within a given range
+---@param t table<string, number|nil>
+---@param min number
+---@param max number
+M.validate_range = function(t, min, max)
+  for name, value in pairs(t) do
+    vim.validate({
+      [name] = {
+        value,
+        function(v)
+          return (v == nil) or ((type(v) == "number") and ((v >= min) and (v <= max)))
+        end,
+        string.format("number between %s and %s", min, max),
+      },
+    })
+  end
+end
+
 return M

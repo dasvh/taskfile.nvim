@@ -47,6 +47,7 @@ require('taskfile').setup({
       width = 0.6,
       height = 0.4,
       border = "rounded"
+      width_ratio = 0.4  -- Ratio (0-1) of list vs preview width
     },
   },
   scroll = {

@@ -134,4 +134,21 @@ tasks:
       ui.select_task_with_preview({})
     end)
   end)
+
+  it("respects width_ratio when calculating window sizes", function()
+    local ratio = 0.5
+    local available_width = 1.0
+    local total_width = math.floor(vim.o.columns * available_width)
+    local expected_list_width = math.floor(total_width * ratio)
+
+    ui.select_task_with_preview(tasks, {
+      width = available_width,
+      height = 0.4,
+      border = "rounded",
+      width_ratio = ratio,
+    })
+
+    local list_win_config = vim.api.nvim_win_get_config(ui._list_win)
+    assert.are.same(expected_list_width, list_win_config.width)
+  end)
 end)

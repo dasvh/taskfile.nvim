@@ -64,4 +64,59 @@ describe("setup", function()
     local keymap_cfg = core._options.keymap
     assert.are.same(keymap_cfg.rerun, "<leader>tt")
   end)
+
+  it("should apply valid width_ratio", function()
+    plugin.setup({
+      windows = {
+        list = {
+          width_ratio = 0.9,
+        },
+      },
+    })
+
+    local ratio = core._options.windows.list.width_ratio
+    assert.are.same(0.9, ratio)
+  end)
+
+  it("should raise error for invalid output width < 0", function()
+    local ok, err = pcall(function()
+      plugin.setup({
+        windows = {
+          output = {
+            width = -0.1,
+          },
+        },
+      })
+    end)
+    assert.is_false(ok)
+    assert.matches("output.width", err)
+  end)
+
+  it("should raise error for invalid list height > 1", function()
+    local ok, err = pcall(function()
+      plugin.setup({
+        windows = {
+          list = {
+            height = 1.5,
+          },
+        },
+      })
+    end)
+    assert.is_false(ok)
+    assert.matches("list.height", err)
+  end)
+
+  it("should raise error for invalid width_ratio type", function()
+    local ok, err = pcall(function()
+      plugin.setup({
+        windows = {
+          list = {
+            width_ratio = "wide",
+          },
+        },
+      })
+    end)
+    assert.is_false(ok)
+    assert.matches("width_ratio", err)
+  end)
 end)
