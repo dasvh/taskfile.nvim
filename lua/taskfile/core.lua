@@ -15,6 +15,7 @@ local config = {
       width = 0.6,
       height = 0.4,
       border = "rounded",
+      width_ratio = 0.4,
     },
   },
   scroll = {
@@ -77,8 +78,11 @@ end
 ---@field height? number # Height of the window (0–1 for percentage)
 ---@field border? string # Border style (e.g., "single", "rounded")
 
+---@class ListWindowConfig : WindowConfig
+---@field width_ratio? number # Ratio (0–1) of list vs preview width. Default is 0.4
+
 ---@class TaskfileConfig
----@field windows? { output?: WindowConfig, list?: WindowConfig } # Floating window layouts
+---@field windows? { output?: WindowConfig, list?: ListWindowConfig } # Floating window layouts
 ---@field scroll? { auto?: boolean } # Auto-scroll output to the bottom
 ---@field keymaps? { rerun?: string } # Keymap configuration for commands like rerun
 --- Setup the Taskfile plugin
@@ -92,6 +96,13 @@ M.setup = function(opts)
   })
   M._options = vim.tbl_deep_extend("force", {}, config, opts or {})
 
+  utils.validate_range({
+    ["windows.output.width"] = M._options.windows.output.width,
+    ["windows.output.height"] = M._options.windows.output.height,
+    ["windows.list.width"] = M._options.windows.list.width,
+    ["windows.list.height"] = M._options.windows.list.height,
+    ["windows.list.width_ratio"] = M._options.windows.list.width_ratio,
+  }, 0, 1)
   if M._options.keymaps ~= false then
     setup_global_keymaps()
   end
@@ -169,7 +180,7 @@ M.close_task_output_window = function()
 end
 
 --- Return the window configuration for the list
----@return WindowConfig
+---@return ListWindowConfig
 M.get_list_config = function()
   return M._options.windows.list
 end

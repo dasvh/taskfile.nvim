@@ -73,7 +73,7 @@ end
 
 --- Opens a floating window with a list of tasks and a preview of the selected task.
 ---@param tasks table List of tasks
----@param config WindowConfig The window config for the preview
+---@param config ListWindowConfig Window Configuration for the list
 M.select_task_with_preview = function(tasks, config)
   if #tasks == 0 then
     vim.notify("No tasks available", vim.log.levels.WARN)
@@ -83,9 +83,11 @@ M.select_task_with_preview = function(tasks, config)
   close_task_output()
   close_task_list_and_preview()
 
+  local window_gap = 2
   local total_width, total_height, row, col = utils.calculate_dimensions(config.width, config.height)
-  local list_width = math.floor(total_width * 0.3)
-  local preview_width = total_width - list_width - 2
+  local ratio = config.width_ratio or 0.3
+  local list_width = math.floor(total_width * ratio)
+  local preview_width = total_width - list_width - window_gap
 
   M._list_buf = vim.api.nvim_create_buf(false, true)
   M._preview_buf = vim.api.nvim_create_buf(false, true)
