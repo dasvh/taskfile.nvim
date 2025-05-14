@@ -103,6 +103,7 @@ M.setup = function(opts)
     ["windows.list.height"] = M._options.windows.list.height,
     ["windows.list.width_ratio"] = M._options.windows.list.width_ratio,
   }, 0, 1)
+
   if M._options.keymaps ~= false then
     setup_global_keymaps()
   end
