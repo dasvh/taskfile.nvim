@@ -2,6 +2,8 @@
 local M = {}
 local utils = require("taskfile.utils")
 
+local WINDOW_GAP = 2
+
 M._list_win = nil
 M._preview_win = nil
 M._list_buf = nil
@@ -83,11 +85,10 @@ M.select_task_with_preview = function(tasks, config)
   close_task_output()
   close_task_list_and_preview()
 
-  local window_gap = 2
   local total_width, total_height, row, col = utils.calculate_dimensions(config.width, config.height)
-  local ratio = config.width_ratio or 0.3
+  local ratio = config.width_ratio or 0.4
   local list_width = math.floor(total_width * ratio)
-  local preview_width = total_width - list_width - window_gap
+  local preview_width = total_width - list_width - WINDOW_GAP
 
   M._list_buf = vim.api.nvim_create_buf(false, true)
   M._preview_buf = vim.api.nvim_create_buf(false, true)
