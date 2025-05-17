@@ -2,13 +2,21 @@
 local M = {}
 local utils = require("taskfile.utils")
 
+--- Gap between list and preview windows
 local WINDOW_GAP = 2
+--- Gap between task name and description
+local TASK_NAME_DESC_GAP = 2
+--- Right padding task list
+local TASK_LIST_PADDING = 2
+--- Minimum width for the preview window
+local MIN_PREVIEW_WIDTH = 10
 
 M._list_win = nil
 M._preview_win = nil
 M._list_buf = nil
 M._preview_buf = nil
 local preview_ns = vim.api.nvim_create_namespace("TaskPreview")
+local current_task_idx = 1
 
 ---@type fun(task: string)
 local execute_task = function(_) end
@@ -45,6 +53,37 @@ local function close_task_list_and_preview()
   M._list_buf = nil
   M._preview_win = nil
   M._preview_buf = nil
+  current_task_idx = 1
+end
+
+local function highlight_task(task_idx, task_line_ranges)
+  vim.api.nvim_buf_clear_namespace(M._list_buf, preview_ns, 0, -1)
+
+  local range = task_line_ranges[task_idx]
+  if not range then
+    return
+  end
+
+  for line = range[1], range[2] do
+    utils.highlight_line(M._list_buf, preview_ns, line - 1)
+  end
+
+  vim.api.nvim_win_set_cursor(M._list_win, { range[1], 0 })
+  current_task_idx = task_idx
+end
+
+local function is_dynamic_ratio(ratio)
+  return ratio == nil or ratio == 0
+end
+
+local function calculate_list_width(tasks, ratio, total_width, label_width)
+  if is_dynamic_ratio(ratio) then
+    local max_task_line_width = utils.max_task_line_width(tasks, label_width, TASK_NAME_DESC_GAP)
+    local available_list_space = total_width - WINDOW_GAP - MIN_PREVIEW_WIDTH
+    return math.min(max_task_line_width + TASK_LIST_PADDING, available_list_space)
+  else
+    return math.floor(total_width * ratio)
+  end
 end
 
 --- Close all open taskfile.nvim related windows
@@ -86,16 +125,31 @@ M.select_task_with_preview = function(tasks, config)
   close_task_list_and_preview()
 
   local total_width, total_height, row, col = utils.calculate_dimensions(config.width, config.height)
-  local ratio = config.width_ratio or 0.4
-  local list_width = math.floor(total_width * ratio)
+  local ratio = config.width_ratio
+  local label_width = utils.max_task_label_length(tasks)
+  local list_width = calculate_list_width(tasks, ratio, total_width, label_width)
   local preview_width = total_width - list_width - WINDOW_GAP
 
   M._list_buf = vim.api.nvim_create_buf(false, true)
   M._preview_buf = vim.api.nvim_create_buf(false, true)
 
-  local lines = vim.tbl_map(function(task)
-    return string.format("%-10s %s", task.name, task.desc or "")
-  end, tasks)
+  local desc_width = math.max(10, list_width - label_width - TASK_NAME_DESC_GAP)
+  local task_line_ranges = {}
+  local lines = {}
+  local current_line = 1
+
+  for task_idx, task in ipairs(tasks) do
+    local formatted =
+      utils.format_task_lines(task.name or "", task.desc or "", label_width, desc_width, TASK_NAME_DESC_GAP)
+
+    local start_line = current_line
+    local end_line = current_line + #formatted - 1
+    task_line_ranges[task_idx] = { start_line, end_line }
+
+    vim.list_extend(lines, formatted)
+    current_line = end_line + 1
+  end
+
   vim.api.nvim_buf_set_lines(M._list_buf, 0, -1, false, lines)
 
   M._list_win = utils.open_floating_win(M._list_buf, {
@@ -110,7 +164,7 @@ M.select_task_with_preview = function(tasks, config)
 
   M._preview_win = utils.open_floating_win(M._preview_buf, {
     row = row,
-    col = col + list_width + 2,
+    col = col + list_width + WINDOW_GAP,
     width = preview_width,
     height = total_height,
     title = "Preview",
@@ -118,39 +172,36 @@ M.select_task_with_preview = function(tasks, config)
     border = config.border,
   }, false)
 
-  local current_line = 1
-  utils.highlight_line(M._list_buf, preview_ns, current_line - 1)
-  update_preview_buf(tasks, current_line)
-
   vim.keymap.set("n", "<CR>", function()
-    local task = tasks[current_line]
+    local task = tasks[current_task_idx]
     if task then
       execute_task(task.name)
     end
   end, { buffer = M._list_buf })
 
-  vim.keymap.set("n", "q", close_task_list_and_preview, { buffer = M._list_buf })
-  vim.keymap.set("n", "<Esc>", close_task_list_and_preview, { buffer = M._list_buf })
+  local function jump_to_task(direction)
+    local next_idx = current_task_idx + direction
+    if next_idx >= 1 and next_idx <= #tasks then
+      highlight_task(next_idx, task_line_ranges)
+      update_preview_buf(tasks, next_idx)
+    end
+  end
+
+  for _, buf in ipairs({ M._list_buf, M._preview_buf }) do
+    for _, key in ipairs({ "q", "<Esc>" }) do
+      vim.keymap.set("n", key, close_task_list_and_preview, { buffer = buf })
+    end
+  end
 
   vim.keymap.set("n", "j", function()
-    if current_line < #tasks then
-      vim.api.nvim_buf_clear_namespace(M._list_buf, preview_ns, 0, -1)
-      current_line = current_line + 1
-      utils.highlight_line(M._list_buf, preview_ns, current_line - 1)
-      update_preview_buf(tasks, current_line)
-      vim.api.nvim_win_set_cursor(M._list_win, { current_line, 0 })
-    end
+    jump_to_task(1)
+  end, { buffer = M._list_buf })
+  vim.keymap.set("n", "k", function()
+    jump_to_task(-1)
   end, { buffer = M._list_buf })
 
-  vim.keymap.set("n", "k", function()
-    if current_line > 1 then
-      vim.api.nvim_buf_clear_namespace(M._list_buf, preview_ns, 0, -1)
-      current_line = current_line - 1
-      utils.highlight_line(M._list_buf, preview_ns, current_line - 1)
-      update_preview_buf(tasks, current_line)
-      vim.api.nvim_win_set_cursor(M._list_win, { current_line, 0 })
-    end
-  end, { buffer = M._list_buf })
+  highlight_task(current_task_idx, task_line_ranges)
+  update_preview_buf(tasks, current_task_idx)
 end
 
 return M
