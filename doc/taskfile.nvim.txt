@@ -1,4 +1,4 @@
-*taskfile.nvim.txt*        For Neovim >= 0.8.0        Last change: 2025 May 14
+*taskfile.nvim.txt*        For Neovim >= 0.8.0        Last change: 2025 May 17
 
 ==============================================================================
 Table of Contents                            *taskfile.nvim-table-of-contents*
@@ -26,6 +26,8 @@ FEATURES                                *taskfile.nvim-taskfile.nvim-features*
 - Run tasks in a floating terminal
 - Automatically scroll to bottom of output (optional)
 - Rerun last task via command or key-map
+- Flexible layout with width_ratio or auto-sizing to fit
+    task names and descriptions neatly
 
 
 REQUIREMENTS                        *taskfile.nvim-taskfile.nvim-requirements*
@@ -63,7 +65,10 @@ fields are optional and shown below with their default values:
           width = 0.6,
           height = 0.4,
           border = "rounded"
-          width_ratio = 0.4  -- Ratio (0-1) of list vs preview width
+          width_ratio = 0,   -- Ratio (0–1) of list vs preview width.
+                             -- If set, determines how much space is given to the list.
+                             -- If unset or 0, the list width is calculated to fit
+                             -- longest task name and description without wrapping.
         },
       },
       scroll = {
