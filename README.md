@@ -13,6 +13,8 @@ A simple plugin for [taskfiles](https://taskfile.dev/)
 - Run tasks in a floating terminal
 - Automatically scroll to bottom of output (optional)
 - Rerun last task via command or key-map
+- Flexible layout with width_ratio or auto-sizing to fit
+  task names and descriptions neatly
 
 ## Requirements
 
@@ -47,7 +49,10 @@ require('taskfile').setup({
       width = 0.6,
       height = 0.4,
       border = "rounded"
-      width_ratio = 0.4  -- Ratio (0-1) of list vs preview width
+      width_ratio = 0,   -- Ratio (0–1) of list vs preview width.
+                         -- If set, determines how much space is given to the list.
+                         -- If unset or 0, the list width is calculated to fit
+                         -- longest task name and description without wrapping.
     },
   },
   scroll = {

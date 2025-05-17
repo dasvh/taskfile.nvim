@@ -15,7 +15,7 @@ local config = {
       width = 0.6,
       height = 0.4,
       border = "rounded",
-      width_ratio = 0.4,
+      width_ratio = 0,
     },
   },
   scroll = {

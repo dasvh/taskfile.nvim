@@ -33,10 +33,11 @@ M.clean_dry_output = function(lines)
 end
 
 M.highlight_line = function(buf, ns, line)
-  local content = vim.api.nvim_buf_get_lines(buf, line, line + 1, false)[1] or ""
   vim.api.nvim_buf_set_extmark(buf, ns, line, 0, {
-    end_col = #content,
+    end_line = line + 1,
     hl_group = "Visual",
+    hl_mode = "combine",
+    hl_eol = true,
   })
 end
 
@@ -74,6 +75,77 @@ M.validate_range = function(t, min, max)
       },
     })
   end
+end
+
+--- Calculates the maximum rendered task line length (label + spacing + desc).
+---@param tasks table
+---@param label_width integer Width of the aligned task label
+---@param gap integer Gap between label and description
+---@return integer max_length
+M.max_task_line_width = function(tasks, label_width, gap)
+  local max = 0
+  for _, task in ipairs(tasks) do
+    local name = task.name or ""
+    local desc = task.desc or ""
+
+    local label = string.format("%-" .. label_width .. "s", name .. ":")
+    local line = label .. string.rep(" ", gap) .. desc
+
+    max = math.max(max, #line)
+  end
+  return max
+end
+
+--- Calculates the maximum length of task labels (e.g., "name:").
+---@param tasks table
+---@return integer max_label_length The length of the longest label
+M.max_task_label_length = function(tasks)
+  local max = 0
+  for _, task in ipairs(tasks) do
+    local label = (task.name or "") .. ":"
+    max = math.max(max, #label)
+  end
+  return max
+end
+
+--- Format task lines with label + wrapped description
+---@param name string
+---@param desc string
+---@param label_width integer
+---@param max_width integer
+---@param gap integer
+---@return string[]
+M.format_task_lines = function(name, desc, label_width, max_width, gap)
+  local label = string.format("%-" .. label_width .. "s", name .. ":")
+  local desc_indent = string.rep(" ", label_width + gap)
+  local desc_gap = string.rep(" ", gap)
+  local no_desc = "(no task desc)"
+
+  -- wrap description words into lines that fit max_width
+  local lines, current = {}, ""
+  for word in desc:gmatch("%S+") do
+    if #current + #word + 1 > max_width then
+      table.insert(lines, current)
+      current = word
+    else
+      current = current == "" and word or (current .. " " .. word)
+    end
+  end
+  if current ~= "" then
+    table.insert(lines, current)
+  end
+
+  local formatted = {}
+  if #lines == 0 then
+    table.insert(formatted, label .. desc_gap .. no_desc)
+  else
+    table.insert(formatted, label .. desc_gap .. lines[1])
+    for i = 2, #lines do
+      table.insert(formatted, desc_indent .. lines[i])
+    end
+  end
+
+  return formatted
 end
 
 return M
