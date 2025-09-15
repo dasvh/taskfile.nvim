@@ -1,10 +1,11 @@
-local Path = require("plenary.path")
 local core = require("taskfile.core")
+local helpers = require("tests.env_helper")
 
 describe("without taskfile", function()
+  helpers.with_empty_dir()
+
   it("should return empty table", function()
     local tasks = core.get_tasks()
-
     assert.are.same({}, tasks)
   end)
 
@@ -20,38 +21,7 @@ describe("with taskfile", function()
     return
   end
 
-  local temp_dir, taskfile_path, original_dir
-
-  before_each(function()
-    temp_dir = vim.fn.tempname()
-    vim.fn.mkdir(temp_dir, "p")
-
-    taskfile_path = Path:new(temp_dir, "Taskfile.yml")
-    taskfile_path:write(
-      [[
-version: '3'
-
-tasks:
-  first:
-    desc: first task desc
-    cmds:
-      - echo "first task with desc"
-  second:
-    cmds:
-      - echo "second task without desc"
-]],
-      "w"
-    )
-
-    original_dir = vim.loop.cwd()
-    vim.cmd("cd " .. temp_dir)
-  end)
-
-  after_each(function()
-    vim.cmd("cd " .. original_dir)
-    taskfile_path:rm()
-    vim.fn.delete(temp_dir, "rf")
-  end)
+  helpers.with_taskfile()
 
   it("should parse task name and desc", function()
     local tasks = core.get_tasks()

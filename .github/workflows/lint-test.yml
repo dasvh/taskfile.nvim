@@ -33,4 +33,4 @@ jobs:
         uses: arduino/setup-task@v2
 
       - name: run tests
-        run: make test
+        run: task test
