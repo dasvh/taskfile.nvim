@@ -1,0 +1,16 @@
+# https://taskfile.dev
+
+version: "3"
+vars:
+  TEST_INIT: "tests/minimal_init.lua"
+  TEST_DIR: "tests/"
+
+tasks:
+  test:
+    desc: run tests
+    cmds:
+      - |
+        nvim --headless \
+          --noplugin \
+          -u {{.TEST_INIT}} \
+          -c "PlenaryBustedDirectory {{.TEST_DIR}} { minimal_init = '{{.TEST_INIT}}' }"

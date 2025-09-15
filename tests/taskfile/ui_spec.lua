@@ -1,6 +1,6 @@
-local Path = require("plenary.path")
 local core = require("taskfile.core")
 local ui = require("taskfile.ui")
+local helpers = require("tests.env_helper")
 
 describe("ui integration", function()
   if vim.fn.executable("task") ~= 1 then
@@ -8,42 +8,12 @@ describe("ui integration", function()
     return
   end
 
-  local tasks, temp_dir, taskfile_path, original_dir
+  helpers.with_taskfile()
+  local tasks
 
   before_each(function()
-    temp_dir = vim.fn.tempname()
-    vim.fn.mkdir(temp_dir, "p")
-
-    taskfile_path = Path:new(temp_dir, "Taskfile.yml")
-    taskfile_path:write(
-      [[
-version: '3'
-
-tasks:
-  first:
-    desc: first task desc
-    cmds:
-      - echo "first task with desc"
-  second:
-    desc: second task desc
-    cmds:
-      - echo "second task without desc"
-]],
-      "w"
-    )
-
-    original_dir = vim.loop.cwd()
-    vim.cmd("cd " .. temp_dir)
-
     tasks = core.get_tasks()
     assert.is_true(#tasks > 0, "Expected tasks to be available for testing")
-    ui.close_all_windows()
-  end)
-
-  after_each(function()
-    vim.cmd("cd " .. original_dir)
-    taskfile_path:rm()
-    vim.fn.delete(temp_dir, "rf")
     ui.close_all_windows()
   end)
 
