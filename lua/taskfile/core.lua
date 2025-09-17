@@ -5,6 +5,7 @@ local utils = require("taskfile.utils")
 
 --- default configuration
 local config = {
+  layout = "horizontal",
   windows = {
     output = {
       width = 0.8,
@@ -16,6 +17,7 @@ local config = {
       height = 0.4,
       border = "rounded",
       width_ratio = 0,
+      height_ratio = 0,
     },
   },
   scroll = {
@@ -96,12 +98,15 @@ M.setup = function(opts)
   })
   M._options = vim.tbl_deep_extend("force", {}, config, opts or {})
 
+  M._options.layout = utils.normalize_layout(M._options.layout)
+
   utils.validate_range({
     ["windows.output.width"] = M._options.windows.output.width,
     ["windows.output.height"] = M._options.windows.output.height,
     ["windows.list.width"] = M._options.windows.list.width,
     ["windows.list.height"] = M._options.windows.list.height,
     ["windows.list.width_ratio"] = M._options.windows.list.width_ratio,
+    ["windows.list.height_ratio"] = M._options.windows.list.height_ratio,
   }, 0, 1)
 
   if M._options.keymaps ~= false then
@@ -183,7 +188,9 @@ end
 --- Return the window configuration for the list
 ---@return ListWindowConfig
 M.get_list_config = function()
-  return M._options.windows.list
+  local list = vim.deepcopy(M._options.windows.list)
+  list.layout = list.layout or M._options.layout or "horizontal"
+  return list
 end
 
 return M

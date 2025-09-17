@@ -12,6 +12,9 @@ describe("setup", function()
     local opts = require("taskfile.core")._options
     assert.are.same("rounded", opts.windows.output.border)
     assert.are.same("rounded", opts.windows.list.border)
+    assert.are.same(true, opts.scroll.auto)
+    assert.are.same("<leader>tr", opts.keymaps.rerun)
+    assert.are.same("horizontal", opts.layout)
   end)
 
   it("should apply custom float config", function()
@@ -78,6 +81,36 @@ describe("setup", function()
     assert.are.same(0.9, ratio)
   end)
 
+  it("should treat ratio nil/unset as 0", function()
+    plugin.setup({
+      windows = {
+        list = {
+          width_ratio = nil,
+          -- height_ratio is not set
+        },
+      },
+    })
+
+    local width_ratio = core._options.windows.list.width_ratio
+    local height_ratio = core._options.windows.list.height_ratio
+
+    assert.are.same(0, width_ratio)
+    assert.are.same(0, height_ratio)
+  end)
+
+  it("should apply valid height_ratio", function()
+    plugin.setup({
+      windows = {
+        list = {
+          height_ratio = 0.5,
+        },
+      },
+    })
+
+    local ratio = core._options.windows.list.height_ratio
+    assert.are.same(0.5, ratio)
+  end)
+
   it("should raise error for invalid output width < 0", function()
     local ok, err = pcall(function()
       plugin.setup({
@@ -118,5 +151,82 @@ describe("setup", function()
     end)
     assert.is_false(ok)
     assert.matches("width_ratio", err)
+  end)
+
+  it("should raise error for invalid height_ratio type", function()
+    local ok, err = pcall(function()
+      plugin.setup({
+        windows = {
+          list = {
+            height_ratio = "tall",
+          },
+        },
+      })
+    end)
+    assert.is_false(ok)
+    assert.matches("height_ratio", err)
+  end)
+
+  it("should raise error for invalid layout value", function()
+    local ok, err = pcall(function()
+      plugin.setup({
+        layout = "grid",
+      })
+    end)
+    assert.is_false(ok)
+    assert.matches("must be one of", err)
+  end)
+
+  it("should allow abbreviated layout values", function()
+    plugin.setup({ layout = "v" })
+    local cfg = core.get_list_config()
+    assert.equals("vertical", cfg.layout)
+
+    plugin.setup({ layout = "vert" })
+    local cfg = core.get_list_config()
+    assert.equals("vertical", cfg.layout)
+
+    plugin.setup({ layout = "h" })
+    cfg = core.get_list_config()
+    assert.equals("horizontal", cfg.layout)
+
+    plugin.setup({ layout = "horiz" })
+    cfg = core.get_list_config()
+    assert.equals("horizontal", cfg.layout)
+  end)
+
+  it("should allow mixed case layout values", function()
+    plugin.setup({ layout = "Vertical" })
+    local cfg = core.get_list_config()
+    assert.equals("vertical", cfg.layout)
+
+    plugin.setup({ layout = "HORIZONTAL" })
+    cfg = core.get_list_config()
+    assert.equals("horizontal", cfg.layout)
+  end)
+
+  it("should fallback to horizontal layout if layout is not a string", function()
+    plugin.setup({ layout = 123 })
+    local cfg = core.get_list_config()
+    assert.equals("horizontal", cfg.layout)
+
+    plugin.setup({ layout = true })
+    cfg = core.get_list_config()
+    assert.equals("horizontal", cfg.layout)
+
+    plugin.setup({ layout = nil })
+    cfg = core.get_list_config()
+    assert.equals("horizontal", cfg.layout)
+  end)
+
+  it("should default to horizontal layout", function()
+    local cfg = core.get_list_config()
+    assert.equals("horizontal", cfg.layout)
+  end)
+
+  it("should allow vertical layout", function()
+    core.setup({ layout = "vertical" })
+    local cfg = core.get_list_config()
+    assert.equals("vertical", cfg.layout)
   end)
 end)
