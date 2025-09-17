@@ -27,3 +27,14 @@ vim.api.nvim_create_user_command("TaskRerun", function()
 end, {
   desc = "Rerun last Task",
 })
+
+vim.api.nvim_create_user_command("TaskToggleLayout", function()
+  local opts = require("taskfile.core")._options
+  opts.layout = (opts.layout == "horizontal") and "vertical" or "horizontal"
+
+  local tasks = require("taskfile.core").get_tasks()
+  if #tasks > 0 then
+    local cfg = require("taskfile.core").get_list_config()
+    require("taskfile.ui").select_task_with_preview(tasks, cfg)
+  end
+end, {})
