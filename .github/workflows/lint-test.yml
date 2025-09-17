@@ -30,7 +30,7 @@ jobs:
           version: ${{ matrix.nvim-versions }}
 
       - name: Install Task
-        uses: arduino/setup-task@v2
+        uses: go-task/setup-task@v1
 
       - name: run tests
         run: task test
