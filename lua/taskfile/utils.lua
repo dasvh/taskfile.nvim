@@ -77,6 +77,34 @@ M.validate_range = function(t, min, max)
   end
 end
 
+--- Normalize layout configuration string to standard format
+---@param layout string|nil Layout string to normalize
+---@return string Normalized layout ("horizontal" or "vertical")
+M.normalize_layout = function(layout)
+  local layouts = {
+    h = "horizontal",
+    horiz = "horizontal",
+    horizontal = "horizontal",
+    v = "vertical",
+    vert = "vertical",
+    vertical = "vertical",
+  }
+
+  local input = type(layout) == "string" and layout:lower() or "horizontal"
+
+  vim.validate({
+    layout = {
+      input,
+      function(v)
+        return layouts[v] ~= nil
+      end,
+      "must be one of: h, horizontal, horz, v, vertical, vert",
+    },
+  })
+
+  return layouts[input]
+end
+
 --- Calculates the maximum rendered task line length (label + spacing + desc).
 ---@param tasks table
 ---@param label_width integer Width of the aligned task label
