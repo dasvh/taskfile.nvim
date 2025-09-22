@@ -3,29 +3,52 @@ local M = {}
 local ui = require("taskfile.ui")
 local utils = require("taskfile.utils")
 
+---@alias TaskfileLayoutInput
+---| '"h"' | '"horiz"' | '"horizontal"'
+---| '"v"' | '"vert"'  | '"vertical"'
+
+---@class WindowConfig
+---@field width?  number                      Width of the window (0-1 for percentage)
+---@field height? number                      Height of the window (0-1 for percentage)
+---@field border? string                      Border style (e.g., "single", "rounded")
+
+---@class ListWindowConfig : WindowConfig
+---@field layout? TaskfileLayoutInput|string  per-call override that accepts shorthands
+---@field width_ratio?  number                only horizontal layout: 0 or nil => dynamic width
+---@field height_ratio? number                only vertical layout: 0 or nil => dynamic height
+
+---@class TaskfileWindowsConfig
+---@field output? WindowConfig
+---@field list?   ListWindowConfig
+
+---@class TaskfileScrollConfig
+---@field auto? boolean                       auto-scroll output to the bottom
+
+---@class TaskfileKeymapsConfig
+---@field rerun? string                       mapping to rerun last task
+
+---@class TaskfileConfig
+---@field layout?  TaskfileLayoutInput|string default selector UI layout; accepts shorthands, normalized internally.
+---@field windows? TaskfileWindowsConfig      floating window layout options.
+---@field scroll?  TaskfileScrollConfig       output scroll behavior
+---@field keymaps? TaskfileKeymapsConfig      keymaps for plugin commands.
+
 --- default configuration
+---@type TaskfileConfig
 local config = {
   layout = "horizontal",
   windows = {
-    output = {
-      width = 0.8,
-      height = 0.8,
-      border = "rounded",
-    },
+    output = { width = 0.8, height = 0.8, border = "rounded" },
     list = {
       width = 0.6,
       height = 0.4,
       border = "rounded",
-      width_ratio = 0,
-      height_ratio = 0,
+      width_ratio = 0, -- dynamic width (horizontal)
+      height_ratio = 0, -- dynamic height (vertical)
     },
   },
-  scroll = {
-    auto = true,
-  },
-  keymaps = {
-    rerun = "<leader>tr",
-  },
+  scroll = { auto = true },
+  keymaps = { rerun = "<leader>tr" },
 }
 
 M._win = nil
@@ -47,15 +70,44 @@ local function setup_global_keymaps()
 end
 
 local function run_task_in_terminal(task)
-  local opts = {}
-  if M._options.scroll.auto then
-    opts.on_stdout = utils.scroll_to_bottom
-    opts.on_stderr = utils.scroll_to_bottom
-    opts.on_exit = utils.scroll_to_bottom
+  local chan_id = vim.api.nvim_open_term(M._buf, {})
+
+  local function write_to_term(data)
+    if data and #data > 1 or (data[1] and data[1] ~= "") then
+      vim.schedule(function()
+        vim.api.nvim_chan_send(chan_id, table.concat(data, "\n") .. "\n")
+        if M._options.scroll.auto then
+          utils.scroll_to_bottom()
+        end
+      end)
+    end
   end
 
-  local term_opts = next(opts) and opts or vim.empty_dict()
-  vim.fn.termopen("task " .. task, term_opts)
+  local opts = {
+    on_stdout = function(_, data)
+      write_to_term(data)
+    end,
+    on_stderr = function(_, data)
+      write_to_term(data)
+    end,
+    on_exit = function(_, exit_code)
+      if M._options.scroll.auto then
+        utils.scroll_to_bottom()
+      end
+      if exit_code ~= 0 then
+        vim.schedule(function()
+          vim.notify("Task '" .. task .. "' exited with code " .. exit_code, vim.log.levels.WARN)
+        end)
+      end
+    end,
+  }
+
+  local cmd = { "task", task }
+  local job_id = vim.fn.jobstart(cmd, opts)
+
+  if job_id <= 0 then
+    vim.api.nvim_chan_send(chan_id, "Failed to start task: " .. task .. "\n")
+  end
 end
 
 local function set_quit_key(buf, win)
@@ -75,18 +127,6 @@ local function taskfile_check()
   return true
 end
 
----@class WindowConfig
----@field width? number  # Width of the window (0–1 for percentage)
----@field height? number # Height of the window (0–1 for percentage)
----@field border? string # Border style (e.g., "single", "rounded")
-
----@class ListWindowConfig : WindowConfig
----@field width_ratio? number # Ratio (0–1) of list vs preview width. Default is 0.4
-
----@class TaskfileConfig
----@field windows? { output?: WindowConfig, list?: ListWindowConfig } # Floating window layouts
----@field scroll? { auto?: boolean } # Auto-scroll output to the bottom
----@field keymaps? { rerun?: string } # Keymap configuration for commands like rerun
 --- Setup the Taskfile plugin
 ---@param opts TaskfileConfig?
 M.setup = function(opts)

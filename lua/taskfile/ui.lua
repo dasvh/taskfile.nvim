@@ -1,15 +1,17 @@
 --@Class ui
 local M = {}
 local utils = require("taskfile.utils")
+local C = utils.const
 
---- Gap between list and preview windows
-local WINDOW_GAP = 2
---- Gap between task name and description
-local TASK_NAME_DESC_GAP = 2
---- Right padding task list
-local TASK_LIST_PADDING = 2
---- Minimum width for the preview window
-local MIN_PREVIEW_WIDTH = 10
+-- cache constants
+local WINDOW_GAP = C.WINDOW_GAP
+local TASK_NAME_DESC_GAP = C.TASK_NAME_DESC_GAP
+local TASK_LIST_PADDING = C.TASK_LIST_PADDING
+local MIN_PREVIEW_WIDTH = C.MIN_PREVIEW_WIDTH
+local MIN_STACK_HEIGHT = C.MIN_STACK_HEIGHT
+local MIN_WRAP_WIDTH = C.MIN_WRAP_WIDTH
+
+M.const = C
 
 M._list_win = nil
 M._preview_win = nil
@@ -82,8 +84,84 @@ local function calculate_list_width(tasks, ratio, total_width, label_width)
     local available_list_space = total_width - WINDOW_GAP - MIN_PREVIEW_WIDTH
     return math.min(max_task_line_width + TASK_LIST_PADDING, available_list_space)
   else
-    return math.floor(total_width * ratio)
+    local wanted = math.floor(total_width * ratio)
+    local max_ok = total_width - WINDOW_GAP - MIN_PREVIEW_WIDTH
+    return math.min(wanted, max_ok)
   end
+end
+
+local function calculate_list_height(tasks, ratio, total_height, list_window_width, label_width)
+  local available_list_space = total_height - WINDOW_GAP - MIN_STACK_HEIGHT
+  local wrap_width = math.max(MIN_WRAP_WIDTH, list_window_width - label_width - TASK_NAME_DESC_GAP)
+
+  local list_h
+  if is_dynamic_ratio(ratio) then
+    local needed = 0
+    for _, t in ipairs(tasks) do
+      local lines = utils.format_task_lines(t.name or "", t.desc or "", label_width, wrap_width, TASK_NAME_DESC_GAP)
+      needed = needed + #lines
+    end
+    list_h = math.max(MIN_STACK_HEIGHT, math.min(needed, available_list_space))
+  else
+    local wanted = math.floor(total_height * ratio)
+    list_h = math.max(MIN_STACK_HEIGHT, math.min(wanted, available_list_space))
+  end
+
+  return list_h, wrap_width
+end
+
+local function compute_horizontal_view(tasks, config, width, height, row, col, label_width)
+  local list_w = calculate_list_width(tasks, config.width_ratio, width, label_width)
+  local preview_w = width - list_w - WINDOW_GAP
+  local wrap_width = math.max(MIN_WRAP_WIDTH, list_w - label_width - TASK_NAME_DESC_GAP)
+
+  local view = {
+    list = { row = row, col = col, width = list_w, height = height },
+    preview = { row = row, col = col + list_w + WINDOW_GAP, width = preview_w, height = height },
+  }
+  return view, wrap_width
+end
+
+local function compute_vertical_view(tasks, config, width, height, row, col, label_width)
+  local list_h, wrap_width = calculate_list_height(tasks, config.height_ratio, height, width, label_width)
+  local preview_h = height - list_h - WINDOW_GAP
+  -- shrink list to favor preview
+  if preview_h < MIN_STACK_HEIGHT then
+    preview_h = MIN_STACK_HEIGHT
+    list_h = height - WINDOW_GAP - preview_h
+    if list_h < 1 then
+      list_h = 1
+      preview_h = math.max(1, height - WINDOW_GAP - list_h)
+    end
+  end
+
+  local view = {
+    list = { row = row, col = col, width = width, height = list_h },
+    preview = { row = row + list_h + WINDOW_GAP, col = col, width = width, height = preview_h },
+  }
+  return view, wrap_width
+end
+
+local function open_windows(view, config)
+  M._list_win = utils.open_floating_win(M._list_buf, {
+    row = view.list.row,
+    col = view.list.col,
+    width = view.list.width,
+    height = view.list.height,
+    title = "Tasks",
+    title_pos = "center",
+    border = config.border,
+  }, true)
+
+  M._preview_win = utils.open_floating_win(M._preview_buf, {
+    row = view.preview.row,
+    col = view.preview.col,
+    width = view.preview.width,
+    height = view.preview.height,
+    title = "Preview",
+    title_pos = "center",
+    border = config.border,
+  }, false)
 end
 
 --- Close all open taskfile.nvim related windows
@@ -125,52 +203,30 @@ M.select_task_with_preview = function(tasks, config)
   close_task_list_and_preview()
 
   local total_width, total_height, row, col = utils.calculate_dimensions(config.width, config.height)
-  local ratio = config.width_ratio
   local label_width = utils.max_task_label_length(tasks)
-  local list_width = calculate_list_width(tasks, ratio, total_width, label_width)
-  local preview_width = total_width - list_width - WINDOW_GAP
 
   M._list_buf = vim.api.nvim_create_buf(false, true)
   M._preview_buf = vim.api.nvim_create_buf(false, true)
 
-  local desc_width = math.max(10, list_width - label_width - TASK_NAME_DESC_GAP)
-  local task_line_ranges = {}
-  local lines = {}
-  local current_line = 1
+  local view, wrap_width
+  if config.layout == "vertical" then
+    view, wrap_width = compute_vertical_view(tasks, config, total_width, total_height, row, col, label_width)
+  else
+    view, wrap_width = compute_horizontal_view(tasks, config, total_width, total_height, row, col, label_width)
+  end
 
+  open_windows(view, config)
+
+  local task_line_ranges, lines, current_line = {}, {}, 1
   for task_idx, task in ipairs(tasks) do
     local formatted =
-      utils.format_task_lines(task.name or "", task.desc or "", label_width, desc_width, TASK_NAME_DESC_GAP)
-
-    local start_line = current_line
-    local end_line = current_line + #formatted - 1
+      utils.format_task_lines(task.name or "", task.desc or "", label_width, wrap_width, TASK_NAME_DESC_GAP)
+    local start_line, end_line = current_line, current_line + #formatted - 1
     task_line_ranges[task_idx] = { start_line, end_line }
-
     vim.list_extend(lines, formatted)
     current_line = end_line + 1
   end
-
   vim.api.nvim_buf_set_lines(M._list_buf, 0, -1, false, lines)
-
-  M._list_win = utils.open_floating_win(M._list_buf, {
-    row = row,
-    col = col,
-    width = list_width,
-    height = total_height,
-    title = "Tasks",
-    title_pos = "center",
-    border = config.border,
-  }, true)
-
-  M._preview_win = utils.open_floating_win(M._preview_buf, {
-    row = row,
-    col = col + list_width + WINDOW_GAP,
-    width = preview_width,
-    height = total_height,
-    title = "Preview",
-    title_pos = "center",
-    border = config.border,
-  }, false)
 
   vim.keymap.set("n", "<CR>", function()
     local task = tasks[current_task_idx]
