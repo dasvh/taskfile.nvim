@@ -8,9 +8,9 @@ Set MarginFill "#3D4262"
 Set BorderRadius 7
 
 
-Set Width 1600
+Set Width 1440
 Set Height 900
-Set FontSize 14
+Set FontSize 16
 
 Hide
 Type "cd $HOME/git/examples/go-web-app"
@@ -26,6 +26,11 @@ Type ":Task"
 Sleep 750ms
 Enter
 Sleep 750ms
+
+Type ":TaskToggleLayout"
+Sleep 500ms
+Enter
+Sleep 500ms
 
 Type "j"
 Sleep 1000ms
@@ -44,6 +49,11 @@ Type ":Task"
 Sleep 1000ms
 Enter
 Sleep 1000ms
+
+Type ":TaskToggleLayout"
+Sleep 500ms
+Enter
+Sleep 500ms
 
 Type "j"
 Sleep 500ms

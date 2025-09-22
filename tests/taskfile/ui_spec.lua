@@ -473,7 +473,7 @@ describe("ui integration", function()
 
   it("horizontal honors width_ratio and ignores height_ratio", function()
     local cfg_width = 0.9
-    local total_weight = math.floor(vim.o.columns * cfg_width)
+    local total_width = math.floor(vim.o.columns * cfg_width)
     local width_ratio = 0.3
 
     ui.select_task_with_preview(require("taskfile.core").get_tasks(), {
@@ -487,8 +487,8 @@ describe("ui integration", function()
 
     local list_cfg, preview_cfg = win_cfg(ui._list_win), win_cfg(ui._preview_win)
 
-    assert.are.equal(math.floor(total_weight * width_ratio), list_cfg.width)
-    assert.are.equal(total_weight, list_cfg.width + 2 + preview_cfg.width) -- gap=2
+    assert.are.equal(math.floor(total_width * width_ratio), list_cfg.width)
+    assert.are.equal(total_width, list_cfg.width + ui.const.WINDOW_GAP + preview_cfg.width)
   end)
 
   it("vertical honors height_ratio and ignores width_ratio", function()
