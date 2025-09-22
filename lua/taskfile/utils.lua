@@ -1,6 +1,33 @@
 ---@Class utils
 local M = {}
 
+---@class UIConstants
+---@field WINDOW_GAP integer          Gap between list and preview windows
+---@field TASK_NAME_DESC_GAP integer  Gap between task name and description
+---@field TASK_LIST_PADDING integer   Right padding task list
+---@field MIN_PREVIEW_WIDTH integer   Minimum width for the preview window
+---@field MIN_STACK_HEIGHT integer    Minimum height for either window when vertical
+---@field MIN_WRAP_WIDTH integer      Minimum width for wrapping the task description column
+
+---@type UIConstants
+local _CONST = {
+  WINDOW_GAP = 2,
+  TASK_NAME_DESC_GAP = 2,
+  TASK_LIST_PADDING = 2,
+  MIN_PREVIEW_WIDTH = 10,
+  MIN_STACK_HEIGHT = 3,
+  MIN_WRAP_WIDTH = 10,
+}
+
+---@type UIConstants
+M.const = setmetatable({}, {
+  __index = _CONST,
+  __newindex = function()
+    error("taskfile.utils.const is read-only", 2)
+  end,
+  __metatable = false,
+})
+
 M.calculate_dimensions = function(percent_width, percent_height)
   local width = math.floor(vim.o.columns * percent_width)
   local height = math.floor(vim.o.lines * percent_height)
