@@ -6,6 +6,10 @@ vars:
   TEST_DIR: "tests/"
 
 tasks:
+  format:
+    desc: format lua
+    cmds:
+      - stylua lua tests
   test:
     desc: run tests
     cmds:
