@@ -28,6 +28,7 @@ local utils = require("taskfile.utils")
 ---@field rerun? string                       mapping to rerun last task
 
 ---@class TaskfileConfig
+---@field picker? "native"|"telescope"        Selection UI to use (default: "native")
 ---@field layout?  TaskfileLayoutInput|string default selector UI layout; accepts shorthands, normalized internally.
 ---@field windows? TaskfileWindowsConfig      floating window layout options.
 ---@field scroll?  TaskfileScrollConfig       output scroll behavior
@@ -36,6 +37,7 @@ local utils = require("taskfile.utils")
 --- default configuration
 ---@type TaskfileConfig
 local config = {
+  picker = "native",
   layout = "horizontal",
   windows = {
     output = { width = 0.8, height = 0.8, border = "rounded" },
@@ -137,6 +139,16 @@ M.setup = function(opts)
     opts = { opts, "table", true },
   })
   M._options = vim.tbl_deep_extend("force", {}, config, opts or {})
+
+  vim.validate({
+    picker = {
+      M._options.picker,
+      function(p)
+        return p == "native" or p == "telescope"
+      end,
+      'must be "native" or "telescope"',
+    },
+  })
 
   M._options.layout = utils.normalize_layout(M._options.layout)
 
