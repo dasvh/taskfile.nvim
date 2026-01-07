@@ -34,6 +34,19 @@ M.execute_or_select = function(task)
       return
     end
 
+    local opts = core._options or {}
+
+    if opts.picker == "telescope" then
+      -- Try to load telescope extension
+      local ok, telescope_ext = pcall(require, "taskfile.telescope")
+      if ok then
+        telescope_ext.pick_task(tasks, core.execute_task, opts)
+        return
+      else
+        vim.notify("Telescope not installed. Falling back to native UI.", vim.log.levels.WARN)
+      end
+    end
+
     local preview_win_cfg = core.get_list_config()
     ui.select_task_with_preview(tasks, preview_win_cfg)
   end

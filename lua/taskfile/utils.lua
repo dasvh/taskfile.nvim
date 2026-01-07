@@ -5,18 +5,28 @@ local M = {}
 ---@field WINDOW_GAP integer          Gap between list and preview windows
 ---@field TASK_NAME_DESC_GAP integer  Gap between task name and description
 ---@field TASK_LIST_PADDING integer   Right padding task list
+---@field MIN_PREVIEW_HEIGHT integer  Minimum height for preview window
 ---@field MIN_PREVIEW_WIDTH integer   Minimum width for the preview window
 ---@field MIN_STACK_HEIGHT integer    Minimum height for either window when vertical
 ---@field MIN_WRAP_WIDTH integer      Minimum width for wrapping the task description column
+---@field NO_WRAP_WIDTH integer       Arbitrary width to disable wrapping in telescope.nvim
+---@field TELESCOPE_HEIGHT integer    Required height for telescope.nvim (borders)
+---@field TELESCOPE_WIDTH integer     Required width for telescope.nvim (caret + borders)
+---@field SELECTION_CARET string      Symbol to add in front of a selected task
 
 ---@type UIConstants
 local _CONST = {
   WINDOW_GAP = 2,
   TASK_NAME_DESC_GAP = 2,
-  TASK_LIST_PADDING = 2,
+  TASK_LIST_PADDING = 4,
   MIN_PREVIEW_WIDTH = 10,
+  MIN_PREVIEW_HEIGHT = 10,
   MIN_STACK_HEIGHT = 3,
   MIN_WRAP_WIDTH = 10,
+  NO_WRAP_WIDTH = 1000,
+  TELESCOPE_HEIGHT = 7,
+  TELESCOPE_WIDTH = 4,
+  SELECTION_CARET = "> ",
 }
 
 ---@type UIConstants

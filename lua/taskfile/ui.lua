@@ -10,6 +10,7 @@ local TASK_LIST_PADDING = C.TASK_LIST_PADDING
 local MIN_PREVIEW_WIDTH = C.MIN_PREVIEW_WIDTH
 local MIN_STACK_HEIGHT = C.MIN_STACK_HEIGHT
 local MIN_WRAP_WIDTH = C.MIN_WRAP_WIDTH
+local SELECTION_CARET = C.SELECTION_CARET
 
 M.const = C
 
@@ -74,11 +75,28 @@ local function highlight_task(task_idx, task_line_ranges)
   current_task_idx = task_idx
 end
 
+local function set_caret(buf, task_idx, is_active, ranges)
+  local range = ranges[task_idx]
+  if not range then
+    return
+  end
+
+  local line_idx = range[1] - 1
+  local lines = vim.api.nvim_buf_get_lines(buf, line_idx, line_idx + 1, false)
+  local line = lines[1] or ""
+
+  local caret_len = #SELECTION_CARET
+  local text_content = line:sub(caret_len + 1)
+
+  local prefix = is_active and SELECTION_CARET or string.rep(" ", caret_len)
+  vim.api.nvim_buf_set_lines(buf, line_idx, line_idx + 1, false, { prefix .. text_content })
+end
+
 local function is_dynamic_ratio(ratio)
   return ratio == nil or ratio == 0
 end
 
-local function calculate_list_width(tasks, ratio, total_width, label_width)
+M.calculate_list_width = function(tasks, ratio, total_width, label_width)
   if is_dynamic_ratio(ratio) then
     local max_task_line_width = utils.max_task_line_width(tasks, label_width, TASK_NAME_DESC_GAP)
     local available_list_space = total_width - WINDOW_GAP - MIN_PREVIEW_WIDTH
@@ -90,7 +108,7 @@ local function calculate_list_width(tasks, ratio, total_width, label_width)
   end
 end
 
-local function calculate_list_height(tasks, ratio, total_height, list_window_width, label_width)
+M.calculate_list_height = function(tasks, ratio, total_height, list_window_width, label_width)
   local available_list_space = total_height - WINDOW_GAP - MIN_STACK_HEIGHT
   local wrap_width = math.max(MIN_WRAP_WIDTH, list_window_width - label_width - TASK_NAME_DESC_GAP)
 
@@ -111,7 +129,7 @@ local function calculate_list_height(tasks, ratio, total_height, list_window_wid
 end
 
 local function compute_horizontal_view(tasks, config, width, height, row, col, label_width)
-  local list_w = calculate_list_width(tasks, config.width_ratio, width, label_width)
+  local list_w = M.calculate_list_width(tasks, config.width_ratio, width, label_width)
   local preview_w = width - list_w - WINDOW_GAP
   local wrap_width = math.max(MIN_WRAP_WIDTH, list_w - label_width - TASK_NAME_DESC_GAP)
 
@@ -123,7 +141,7 @@ local function compute_horizontal_view(tasks, config, width, height, row, col, l
 end
 
 local function compute_vertical_view(tasks, config, width, height, row, col, label_width)
-  local list_h, wrap_width = calculate_list_height(tasks, config.height_ratio, height, width, label_width)
+  local list_h, wrap_width = M.calculate_list_height(tasks, config.height_ratio, height, width, label_width)
   local preview_h = height - list_h - WINDOW_GAP
   -- shrink list to favor preview
   if preview_h < MIN_STACK_HEIGHT then
@@ -204,6 +222,7 @@ M.select_task_with_preview = function(tasks, config)
 
   local total_width, total_height, row, col = utils.calculate_dimensions(config.width, config.height)
   local label_width = utils.max_task_label_length(tasks)
+  local indent = string.rep(" ", #SELECTION_CARET)
 
   M._list_buf = vim.api.nvim_create_buf(false, true)
   M._preview_buf = vim.api.nvim_create_buf(false, true)
@@ -221,6 +240,11 @@ M.select_task_with_preview = function(tasks, config)
   for task_idx, task in ipairs(tasks) do
     local formatted =
       utils.format_task_lines(task.name or "", task.desc or "", label_width, wrap_width, TASK_NAME_DESC_GAP)
+
+    for i, line in ipairs(formatted) do
+      formatted[i] = indent .. line
+    end
+
     local start_line, end_line = current_line, current_line + #formatted - 1
     task_line_ranges[task_idx] = { start_line, end_line }
     vim.list_extend(lines, formatted)
@@ -238,6 +262,8 @@ M.select_task_with_preview = function(tasks, config)
   local function jump_to_task(direction)
     local next_idx = current_task_idx + direction
     if next_idx >= 1 and next_idx <= #tasks then
+      set_caret(M._list_buf, current_task_idx, false, task_line_ranges)
+      set_caret(M._list_buf, next_idx, true, task_line_ranges)
       highlight_task(next_idx, task_line_ranges)
       update_preview_buf(tasks, next_idx)
     end
@@ -256,6 +282,7 @@ M.select_task_with_preview = function(tasks, config)
     jump_to_task(-1)
   end, { buffer = M._list_buf })
 
+  set_caret(M._list_buf, current_task_idx, true, task_line_ranges)
   highlight_task(current_task_idx, task_line_ranges)
   update_preview_buf(tasks, current_task_idx)
 end

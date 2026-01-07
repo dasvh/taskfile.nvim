@@ -1,4 +1,4 @@
-Output demo.gif
+Output demo_telescope.gif
 
 Set Theme "TokyoNight"
 
@@ -6,7 +6,6 @@ Set Padding 5
 Set Margin 10
 Set MarginFill "#3D4262"
 Set BorderRadius 7
-
 
 Set Width 1440
 Set Height 900
@@ -20,6 +19,13 @@ Enter
 Type "nvim app.go"
 Enter
 
+Type ":lua require('taskfile').setup({ picker = 'telescope', layout = 'vertical', windows = { output = { width = 0.8, height = 0.8, }, list = { width = 0.8, height = 0.8, }, })"
+Enter
+
+Sleep 500ms
+Type ":"
+Backspace
+
 Show
 Sleep 750ms
 Type ":Task"
@@ -27,22 +33,18 @@ Sleep 750ms
 Enter
 Sleep 750ms
 
+Escape
 Type ":TaskToggleLayout"
 Sleep 500ms
 Enter
 Sleep 500ms
 
-Type "j"
+Type "clean"
 Sleep 1000ms
 Enter
 Sleep 1000ms
 Type "q"
 Sleep 1000ms
-
-Type ":Task default"
-Sleep 750ms
-Enter
-Sleep 2000ms
 
 
 Type ":Task"
@@ -50,14 +52,9 @@ Sleep 1000ms
 Enter
 Sleep 1000ms
 
-Type ":TaskToggleLayout"
+Ctrl+n
 Sleep 500ms
-Enter
-Sleep 500ms
-
-Type "j"
-Sleep 500ms
-Type "j"
+Ctrl+n
 Sleep 500ms
 Enter
 Sleep 1000ms
