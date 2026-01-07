@@ -8,7 +8,7 @@ A simple plugin for [taskfiles](https://taskfile.dev/)
 ## Features
 
 - Run a specific task directly within Neovim
-- Browse available tasks with a floating window
+- Browse available tasks with a floating window **or** [Telescope](https://github.com/nvim-telescope/telescope.nvim)
 - Preview each task’s command before execution
 - Run tasks in a floating terminal
 - Automatically scroll to bottom of output (optional)
@@ -24,6 +24,7 @@ A simple plugin for [taskfiles](https://taskfile.dev/)
 
 - [task](https://taskfile.dev/#/installation) CLI installed and in your `$PATH`
 - Neovim 0.8 or higher (0.9+ recommended)
+- [telescope.nvim](https://github.com/nvim-telescope/telescope.nvim) (optional, only if using `picker = "telescope"`)
 
 ## Setup
 
@@ -43,6 +44,7 @@ All fields are optional and shown below with their default values:
 
 ```lua
 require('taskfile').setup({
+  picker = "native",     -- Selection UI: 'native' (default) or 'telescope'
   layout = "horizontal", -- Layout: 'h', 'horiz', 'horizontal' or 'v', 'vert', 'vertical'.
                          -- For 'horizontal' layout, list and preview are side-by-side.
                          -- For 'vertical', list is above preview (vertically stacked).
@@ -96,6 +98,10 @@ You can also bind a key to rerun using the `keymaps.rerun` config.
 
 ## Demo
 
-![Demo GIF](./demo/demo.gif)
+Demo with Native (default) Picker GIF
+![Demo with Native Picker GIF](./demo/demo_native.gif)
+
+Demo with Telescope Picker GIF
+![Demo with Telescope Picker GIF](./demo/demo_picker.gif)
 
 <!-- panvimdoc-ignore-end -->

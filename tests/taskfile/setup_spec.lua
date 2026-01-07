@@ -229,4 +229,30 @@ describe("setup", function()
     local cfg = core.get_list_config()
     assert.equals("vertical", cfg.layout)
   end)
+
+  it("should default to native picker", function()
+    -- core.setup({})
+    local opts = core._options
+    assert.are.same("native", opts.picker)
+  end)
+
+  it("should apply telescope picker config", function()
+    plugin.setup({ picker = "telescope" })
+    local opts = core._options
+    assert.are.same("telescope", opts.picker)
+  end)
+
+  it("should allow explicit native picker config", function()
+    plugin.setup({ picker = "native" })
+    local opts = core._options
+    assert.are.same("native", opts.picker)
+  end)
+
+  it("should raise error for invalid picker type", function()
+    local ok, err = pcall(function()
+      plugin.setup({ picker = "invalid_picker" })
+    end)
+    assert.is_false(ok)
+    assert.matches("picker", err)
+  end)
 end)

@@ -29,12 +29,23 @@ end, {
 })
 
 vim.api.nvim_create_user_command("TaskToggleLayout", function()
-  local opts = require("taskfile.core")._options
+  local core = require("taskfile.core")
+  local opts = core._options
   opts.layout = (opts.layout == "horizontal") and "vertical" or "horizontal"
 
-  local tasks = require("taskfile.core").get_tasks()
+  local tasks = core.get_tasks()
   if #tasks > 0 then
-    local cfg = require("taskfile.core").get_list_config()
+    if opts.picker == "telescope" then
+      local ok, ts = pcall(require, "taskfile.telescope")
+      if ok then
+        ts.pick_task(tasks, core.execute_task, opts)
+        return
+      else
+        vim.notify("Telescope not installed. Falling back to native UI.", vim.log.levels.WARN)
+      end
+    end
+
+    local cfg = core.get_list_config()
     require("taskfile.ui").select_task_with_preview(tasks, cfg)
   end
 end, {})
