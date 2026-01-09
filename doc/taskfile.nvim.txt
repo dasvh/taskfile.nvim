@@ -1,4 +1,4 @@
-*taskfile.nvim.txt*     For Neovim >= 0.8.0     Last change: 2025 September 22
+*taskfile.nvim.txt*      For Neovim >= 0.8.0      Last change: 2026 January 09
 
 ==============================================================================
 Table of Contents                            *taskfile.nvim-table-of-contents*
@@ -21,14 +21,14 @@ A simple plugin for taskfiles <https://taskfile.dev/>
 FEATURES                                *taskfile.nvim-taskfile.nvim-features*
 
 - Run a specific task directly within Neovim
-- Browse available tasks with a floating window
+- Browse available tasks with a floating window **or** Telescope <https://github.com/nvim-telescope/telescope.nvim>
 - Preview each task’s command before execution
 - Run tasks in a floating terminal
 - Automatically scroll to bottom of output (optional)
 - Rerun last task via command or key-map
 - Flexible layouts:
-    - **Horizontal**task list and preview side-by-side
-    - **Vertical**task list stacked above preview
+    - **Horizontal**: task list and preview side-by-side
+    - **Vertical**: task list stacked above preview
 - Configurable `width_ratio` / `height_ratio` or automatic sizing
     to neatly fit task names and descriptions
 - Toggle between horizontal and vertical layouts at runtime
@@ -38,6 +38,7 @@ REQUIREMENTS                        *taskfile.nvim-taskfile.nvim-requirements*
 
 - task <https://taskfile.dev/#/installation> CLI installed and in your `$PATH`
 - Neovim 0.8 or higher (0.9+ recommended)
+- telescope.nvim <https://github.com/nvim-telescope/telescope.nvim> (optional, only if using `picker = "telescope"`)
 
 
 SETUP                                      *taskfile.nvim-taskfile.nvim-setup*
@@ -59,6 +60,7 @@ fields are optional and shown below with their default values:
 
 >lua
     require('taskfile').setup({
+      picker = "native",     -- Selection UI: 'native' (default) or 'telescope'
       layout = "horizontal", -- Layout: 'h', 'horiz', 'horizontal' or 'v', 'vert', 'vertical'.
                              -- For 'horizontal' layout, list and preview are side-by-side.
                              -- For 'vertical', list is above preview (vertically stacked).
@@ -102,10 +104,10 @@ This plugin reads your Taskfile and displays available tasks.
 
 COMMANDS ~
 
-- `:Task <task_name>`Run a specific task by name
-- `:Task`Show a floating task selector with preview
-- `:TaskRerun`Rerun the last executed task
-- `:TaskToggleLayout`Toggles the layout for the current Neovim session.
+- `:Task <task_name>`: Run a specific task by name
+- `:Task`: Show a floating task selector with preview
+- `:TaskRerun`: Rerun the last executed task
+- `:TaskToggleLayout`: Toggles the layout for the current Neovim session.
     On restart, it resets to your configured default.
 
 You can also bind a key to rerun using the `keymaps.rerun` config.
