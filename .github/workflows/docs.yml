@@ -29,3 +29,4 @@ jobs:
           commit-message: Update plugin docs
           assignees: dasvh
           reviewers: dasvh
+          sign-commits: true
