@@ -32,12 +32,11 @@ M.const = C
 ---@field preview_height? integer Vertical: Specific height for preview
 ---@field prompt_position? "top"|"bottom"
 ---@field mirror? boolean         If true, mirrors the layout (prompt/list on top in vertical)
----@field label_width? integer    Cached max width of task labels
 
 --- Calculate layout to match native behavior
 ---@param opts table Taskfile configuration
 ---@param tasks table List of tasks
----@return string strategy, TelescopeLayoutConfig layout_conf
+---@return string strategy, TelescopeLayoutConfig layout_conf, integer label_width
 local function get_layout_config(opts, tasks)
   opts = opts or {}
   local list_conf = (opts.windows and opts.windows.list) or {}
@@ -51,7 +50,6 @@ local function get_layout_config(opts, tasks)
   local layout_conf = {
     width = total_width,
     height = total_height,
-    label_width = label_width,
   }
 
   if strategy == "vertical" then
@@ -79,7 +77,7 @@ local function get_layout_config(opts, tasks)
     layout_conf.preview_width = math.max(MIN_PREVIEW_WIDTH, preview_w)
   end
 
-  return strategy, layout_conf
+  return strategy, layout_conf, label_width
 end
 
 local function task_previewer()
@@ -98,7 +96,7 @@ local function task_previewer()
 end
 
 M.pick_task = function(tasks, run_callback, plugin_opts)
-  local strategy, layout_conf = get_layout_config(plugin_opts, tasks)
+  local strategy, layout_conf, label_width = get_layout_config(plugin_opts, tasks)
 
   pickers
     .new({}, {
@@ -113,8 +111,7 @@ M.pick_task = function(tasks, run_callback, plugin_opts)
           local desc = task.desc or ""
 
           -- we pass NO_WRAP_WIDTH to effectively disable wrapping.
-          local formatted_lines =
-            utils.format_task_lines(name, desc, layout_conf.label_width, NO_WRAP_WIDTH, TASK_NAME_DESC_GAP)
+          local formatted_lines = utils.format_task_lines(name, desc, label_width, NO_WRAP_WIDTH, TASK_NAME_DESC_GAP)
 
           return {
             value = task,
